@@ -15,6 +15,7 @@ import "../../storage/Config.sol";
 import "../../storage/Market.sol";
 import "../../storage/MarketCreator.sol";
 import "../../storage/Distribution.sol";
+import "@synthetixio/core-contracts/contracts/context/Context.sol";
 
 import "@synthetixio/core-modules/contracts/storage/AssociatedSystem.sol";
 import "@synthetixio/core-modules/contracts/storage/FeatureFlag.sol";
@@ -61,7 +62,7 @@ contract MarketManagerModule is IMarketManagerModule {
 
         marketId = MarketCreator.create(market).id;
 
-        emit MarketRegistered(market, marketId, msg.sender);
+        emit MarketRegistered(market, marketId, Context.getMessageSender());
 
         return marketId;
     }
@@ -200,7 +201,7 @@ contract MarketManagerModule is IMarketManagerModule {
         Market.Data storage market = Market.load(marketId);
 
         // Call must come from the market itself.
-        if (msg.sender != market.marketAddress) revert AccessError.Unauthorized(msg.sender);
+        if (Context.getMessageSender() != market.marketAddress) revert AccessError.Unauthorized(Context.getMessageSender());
 
         feeAmount = amount.mulDecimal(Config.readUint(_CONFIG_DEPOSIT_MARKET_USD_FEE_RATIO, 0));
         address feeAddress = feeAmount > 0
@@ -218,7 +219,7 @@ contract MarketManagerModule is IMarketManagerModule {
         // Note: Instead of burning, we could transfer USD to and from the MarketManager,
         // but minting and burning takes the USD out of circulation,
         // which doesn't affect `totalSupply`, thus simplifying accounting.
-        IUSDTokenModule(address(usdToken)).burnWithAllowance(target, msg.sender, amount);
+        IUSDTokenModule(address(usdToken)).burnWithAllowance(target, Context.getMessageSender(), amount);
 
         if (feeAmount > 0 && feeAddress != address(0)) {
             IUSDTokenModule(address(usdToken)).mint(feeAddress, feeAmount);
@@ -226,7 +227,7 @@ contract MarketManagerModule is IMarketManagerModule {
             emit MarketSystemFeePaid(marketId, feeAmount);
         }
 
-        emit MarketUsdDeposited(marketId, target, amount, msg.sender);
+        emit MarketUsdDeposited(marketId, target, amount, Context.getMessageSender());
     }
 
     /**
@@ -241,7 +242,7 @@ contract MarketManagerModule is IMarketManagerModule {
         Market.Data storage marketData = Market.load(marketId);
 
         // Call must come from the market itself.
-        if (msg.sender != marketData.marketAddress) revert AccessError.Unauthorized(msg.sender);
+        if (Context.getMessageSender() != marketData.marketAddress) revert AccessError.Unauthorized(Context.getMessageSender());
 
         // Ensure that the market's balance allows for this withdrawal.
         feeAmount = amount.mulDecimal(Config.readUint(_CONFIG_WITHDRAW_MARKET_USD_FEE_RATIO, 0));
@@ -265,7 +266,7 @@ contract MarketManagerModule is IMarketManagerModule {
             emit MarketSystemFeePaid(marketId, feeAmount);
         }
 
-        emit MarketUsdWithdrawn(marketId, target, amount, msg.sender);
+        emit MarketUsdWithdrawn(marketId, target, amount, Context.getMessageSender());
     }
 
     /**
@@ -303,7 +304,7 @@ contract MarketManagerModule is IMarketManagerModule {
     ) external payable override {
         Market.Data storage market = Market.load(marketId);
 
-        if (msg.sender != market.marketAddress) revert AccessError.Unauthorized(msg.sender);
+        if (Context.getMessageSender() != market.marketAddress) revert AccessError.Unauthorized(Context.getMessageSender());
 
         // min delegate time should not be unreasonably long
         uint256 maxMinDelegateTime = Config.readUint(

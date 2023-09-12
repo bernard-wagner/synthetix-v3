@@ -7,11 +7,13 @@ import "@synthetixio/core-contracts/contracts/utils/DecimalMath.sol";
 import "@synthetixio/core-contracts/contracts/utils/SafeCast.sol";
 import "@synthetixio/core-contracts/contracts/token/ERC20Helper.sol";
 import "@synthetixio/core-contracts/contracts/errors/AccessError.sol";
+import "@synthetixio/core-contracts/contracts/context/Context.sol";
 
 import "@synthetixio/core-modules/contracts/storage/FeatureFlag.sol";
 
 import "../../storage/Account.sol";
 import "../../storage/Pool.sol";
+
 
 /**
  * @title Module for associating debt with the system.
@@ -51,8 +53,8 @@ contract AssociateDebtModule is IAssociateDebtModule {
         VaultEpoch.Data storage epochData = poolData.vaults[collateralType].currentEpoch();
         Market.Data storage marketData = Market.load(marketId);
 
-        if (msg.sender != marketData.marketAddress) {
-            revert AccessError.Unauthorized(msg.sender);
+        if (Context.getMessageSender() != marketData.marketAddress) {
+            revert AccessError.Unauthorized(Context.getMessageSender());
         }
 
         // The market must appear in pool configuration of the specified position

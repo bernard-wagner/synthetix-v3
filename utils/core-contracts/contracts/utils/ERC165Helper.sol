@@ -7,8 +7,8 @@ library ERC165Helper {
     function safeSupportsInterface(
         address candidate,
         bytes4 interfaceID
-    ) internal returns (bool supportsInterface) {
-        (bool success, bytes memory response) = candidate.call(
+    ) internal view returns (bool supportsInterface) {
+        (bool success, bytes memory response) = candidate.staticcall(
             abi.encodeWithSelector(IERC165.supportsInterface.selector, interfaceID)
         );
 

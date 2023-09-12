@@ -4,6 +4,7 @@ pragma solidity >=0.8.11 <0.9.0;
 import "../../interfaces/ILiquidationModule.sol";
 
 import "../../storage/Account.sol";
+import "@synthetixio/core-contracts/contracts/context/Context.sol";
 
 import "@synthetixio/core-modules/contracts/storage/AssociatedSystem.sol";
 
@@ -119,7 +120,7 @@ contract LiquidationModule is ILiquidationModule {
             collateralType,
             liquidationData,
             liquidateAsAccountId,
-            msg.sender
+            Context.getMessageSender()
         );
     }
 
@@ -168,7 +169,7 @@ contract LiquidationModule is ILiquidationModule {
             liquidationData.debtLiquidated = vaultDebt;
 
             // Burn all of the stablecoins necessary to clear the debt of this vault
-            AssociatedSystem.load(_USD_TOKEN).asToken().burn(msg.sender, vaultDebt);
+            AssociatedSystem.load(_USD_TOKEN).asToken().burn(Context.getMessageSender(), vaultDebt);
 
             // Provide all of the collateral to the liquidator
             liquidationData.collateralLiquidated = vault
@@ -183,7 +184,7 @@ contract LiquidationModule is ILiquidationModule {
             liquidationData.debtLiquidated = maxUsd;
 
             // Burn all of the stablecoins provided by the liquidator
-            AssociatedSystem.load(_USD_TOKEN).asToken().burn(msg.sender, maxUsd);
+            AssociatedSystem.load(_USD_TOKEN).asToken().burn(Context.getMessageSender(), maxUsd);
 
             VaultEpoch.Data storage epoch = vault.currentEpoch();
 
@@ -210,7 +211,7 @@ contract LiquidationModule is ILiquidationModule {
             collateralType,
             liquidationData,
             liquidateAsAccountId,
-            msg.sender
+            Context.getMessageSender()
         );
     }
 

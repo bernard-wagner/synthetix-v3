@@ -1,10 +1,11 @@
 import { snapshotCheckpoint } from '@synthetixio/core-utils/utils/mocha/snapshot';
 import { Proxy as OracleManagerProxy } from '@synthetixio/oracle-manager/test/generated/typechain';
+import { Proxy as MulticallProxy } from '@synthetixio/multicall/test/generated/typechain';
 import { coreBootstrap } from '@synthetixio/router/dist/utils/tests';
 import { wei } from '@synthetixio/wei';
 import { ethers } from 'ethers';
 import hre from 'hardhat';
-import type { AccountProxy, CoreProxy, USDProxy, CollateralMock } from '../generated/typechain';
+import type { AccountProxy, CoreProxy, USDProxy, CollateralMock, MulticallModule } from '../generated/typechain';
 import { MockMarket } from '../../typechain-types';
 import { createStakedPool } from '../common';
 
@@ -17,6 +18,7 @@ export interface Proxies {
   CollateralMock: CollateralMock;
   Collateral2Mock: CollateralMock;
   ['oracle_manager.Proxy']: OracleManagerProxy;
+  ['multicall.Proxy']: MulticallProxy;
 }
 
 export interface Systems {
@@ -26,6 +28,7 @@ export interface Systems {
   CollateralMock: CollateralMock;
   Collateral2Mock: CollateralMock;
   OracleManager: OracleManagerProxy;
+  Multicall: MulticallProxy;
 }
 
 const { getProvider, getSigners, getContract, createSnapshot } = coreBootstrap<Proxies>({
@@ -45,6 +48,7 @@ export function bootstrap() {
       OracleManager: getContract('oracle_manager.Proxy'),
       CollateralMock: getContract('CollateralMock'),
       Collateral2Mock: getContract('Collateral2Mock'),
+      Multicall: getContract('multicall.Proxy'),
     } as Systems;
   });
 

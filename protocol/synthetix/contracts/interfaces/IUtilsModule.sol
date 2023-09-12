@@ -42,6 +42,12 @@ interface IUtilsModule is IERC165 {
     function configureOracleManager(address oracleManagerAddress) external payable;
 
     /**
+     * @notice Configure the system's single multicall proxy address.
+     * @param multicallProxyAddress The address of the multicall router proxy.
+     */
+    function configureMulticall(address multicallProxyAddress) external payable;
+
+    /**
      * @notice Configure a generic value in the KV system
      * @param k the key of the value to set
      * @param v the value that the key should be set to

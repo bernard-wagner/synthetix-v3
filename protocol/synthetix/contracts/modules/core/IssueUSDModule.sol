@@ -12,6 +12,7 @@ import "../../storage/Account.sol";
 import "../../storage/Collateral.sol";
 import "../../storage/CollateralConfiguration.sol";
 import "../../storage/Config.sol";
+import "@synthetixio/core-contracts/contracts/context/Context.sol";
 
 /**
  * @title Module for the minting and burning of stablecoins.
@@ -113,7 +114,7 @@ contract IssueUSDModule is IIssueUSDModule {
             emit IssuanceFeePaid(accountId, poolId, collateralType, feeAmount);
         }
 
-        emit UsdMinted(accountId, poolId, collateralType, amount, msg.sender);
+        emit UsdMinted(accountId, poolId, collateralType, amount, Context.getMessageSender());
     }
 
     /**
@@ -172,6 +173,6 @@ contract IssueUSDModule is IIssueUSDModule {
         // Increase the credit available in the vault
         pool.recalculateVaultCollateral(collateralType);
 
-        emit UsdBurned(accountId, poolId, collateralType, amount, msg.sender);
+        emit UsdBurned(accountId, poolId, collateralType, amount, Context.getMessageSender());
     }
 }

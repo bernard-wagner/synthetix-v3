@@ -2,6 +2,7 @@
 pragma solidity >=0.8.11 <0.9.0;
 
 import "../errors/AccessError.sol";
+import "../context/Context.sol";
 
 library AuthorizableStorage {
     bytes32 private constant _SLOT_AUTHORIZABLE_STORAGE =
@@ -19,8 +20,8 @@ library AuthorizableStorage {
     }
 
     function onlyAuthorized() internal view {
-        if (msg.sender != getAuthorized()) {
-            revert AccessError.Unauthorized(msg.sender);
+        if (Context.getMessageSender() != getAuthorized()) {
+            revert AccessError.Unauthorized(Context.getMessageSender());
         }
     }
 

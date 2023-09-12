@@ -22,6 +22,8 @@ interface ITokenModule is IERC20 {
         uint8 tokenDecimals
     ) external payable;
 
+    function setMulticallProxyAddress(address receiver) external payable;
+
     /**
      * @notice Allows the owner to mint tokens.
      * @param to The address to receive the newly minted tokens.

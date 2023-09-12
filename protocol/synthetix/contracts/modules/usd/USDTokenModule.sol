@@ -45,6 +45,11 @@ contract USDTokenModule is ERC20, InitializableMixin, IUSDTokenModule {
         _initialize(tokenName, tokenSymbol, tokenDecimals);
     }
 
+    function setMulticallProxyAddress(address proxy) external payable override {
+        OwnableStorage.onlyOwner();
+        Context.setMulticallAddress(proxy);
+    }
+
     /**
      * @dev Allows the core system and CCIP to mint tokens.
      */

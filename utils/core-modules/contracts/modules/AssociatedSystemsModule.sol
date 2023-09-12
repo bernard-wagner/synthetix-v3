@@ -4,6 +4,7 @@ pragma solidity >=0.8.11 <0.9.0;
 import "@synthetixio/core-contracts/contracts/errors/InitError.sol";
 import "@synthetixio/core-contracts/contracts/ownership/OwnableStorage.sol";
 import "@synthetixio/core-contracts/contracts/proxy/UUPSProxyWithOwner.sol";
+import "@synthetixio/core-contracts/contracts/context/Context.sol";
 import "../interfaces/IAssociatedSystemsModule.sol";
 
 import "@synthetixio/core-contracts/contracts/interfaces/IUUPSImplementation.sol";
@@ -112,6 +113,7 @@ contract AssociatedSystemsModule is IAssociatedSystemsModule {
 
         // tell the associated proxy to upgrade to the new implementation
         IUUPSImplementation(proxy).upgradeTo(impl);
+        ITokenModule(proxy).setMulticallProxyAddress(address(Context.load().instance));
 
         emit AssociatedSystemSet(AssociatedSystem.KIND_ERC721, id, proxy, impl);
     }
@@ -135,6 +137,7 @@ contract AssociatedSystemsModule is IAssociatedSystemsModule {
             address proxy = address(new UUPSProxyWithOwner(impl, address(this)));
 
             ITokenModule(proxy).initialize(name, symbol, decimals);
+            ITokenModule(proxy).setMulticallProxyAddress(address(Context.load().instance));
 
             _setAssociatedSystem(id, AssociatedSystem.KIND_ERC20, proxy, impl);
         }
@@ -157,8 +160,11 @@ contract AssociatedSystemsModule is IAssociatedSystemsModule {
             address proxy = address(new UUPSProxyWithOwner(impl, address(this)));
 
             INftModule(proxy).initialize(name, symbol, uri);
+            INftModule(proxy).setMulticallProxyAddress(address(Context.load().instance));
 
             _setAssociatedSystem(id, AssociatedSystem.KIND_ERC721, proxy, impl);
         }
+
+        
     }
 }

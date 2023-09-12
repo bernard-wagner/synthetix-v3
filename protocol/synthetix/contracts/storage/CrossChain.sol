@@ -6,7 +6,7 @@ import {AccessError} from "@synthetixio/core-contracts/contracts/errors/AccessEr
 
 import "@synthetixio/core-contracts/contracts/interfaces/IERC20.sol";
 import "../interfaces/external/ICcipRouterClient.sol";
-
+import "@synthetixio/core-contracts/contracts/context/Context.sol";
 /**
  * @title System wide configuration for anything
  */
@@ -38,8 +38,8 @@ library CrossChain {
     }
 
     function processCcipReceive(Data storage self, CcipClient.Any2EVMMessage memory data) internal {
-        if (address(self.ccipRouter) == address(0) || msg.sender != address(self.ccipRouter)) {
-            revert NotCcipRouter(msg.sender);
+        if (address(self.ccipRouter) == address(0) || Context.getMessageSender() != address(self.ccipRouter)) {
+            revert NotCcipRouter(Context.getMessageSender());
         }
 
         uint64 sourceChainId = self.ccipSelectorToChainId[data.sourceChainSelector];
@@ -84,8 +84,8 @@ library CrossChain {
     }
 
     function onlyCrossChain() internal view {
-        if (msg.sender != address(this)) {
-            revert AccessError.Unauthorized(msg.sender);
+        if (Context.getMessageSender() != address(this)) {
+            revert AccessError.Unauthorized(Context.getMessageSender());
         }
     }
 
@@ -104,7 +104,7 @@ library CrossChain {
         CcipClient.EVMTokenAmount[] memory tokenAmounts = new CcipClient.EVMTokenAmount[](1);
         tokenAmounts[0] = CcipClient.EVMTokenAmount(token, amount);
 
-        bytes memory data = abi.encode(msg.sender);
+        bytes memory data = abi.encode(Context.getMessageSender());
         CcipClient.EVM2AnyMessage memory sentMsg = CcipClient.EVM2AnyMessage(
             abi.encode(address(this)), // abi.encode(receiver address) for dest EVM chains
             data,
@@ -129,7 +129,7 @@ library CrossChain {
     function refundLeftoverGas(uint256 gasTokenUsed) internal returns (uint256 amountRefunded) {
         amountRefunded = msg.value - gasTokenUsed;
 
-        (bool success, bytes memory result) = msg.sender.call{value: amountRefunded}("");
+        (bool success, bytes memory result) = Context.getMessageSender().call{value: amountRefunded}("");
 
         if (!success) {
             uint256 len = result.length;

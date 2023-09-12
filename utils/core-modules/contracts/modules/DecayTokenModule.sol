@@ -10,6 +10,7 @@ import "../interfaces/IDecayTokenModule.sol";
 import "../storage/DecayToken.sol";
 
 import "./TokenModule.sol";
+import "@synthetixio/core-contracts/contracts/context/Context.sol";
 
 contract DecayTokenModule is IDecayTokenModule, TokenModule {
     using DecimalMath for uint256;
@@ -128,13 +129,13 @@ contract DecayTokenModule is IDecayTokenModule, TokenModule {
     ) external virtual override(ERC20, IERC20) returns (bool) {
         ERC20Storage.Data storage store = ERC20Storage.load();
 
-        uint256 currentAllowance = store.allowance[from][msg.sender];
+        uint256 currentAllowance = store.allowance[from][Context.getMessageSender()];
         if (currentAllowance < amount) {
             revert InsufficientAllowance(amount, currentAllowance);
         }
 
         unchecked {
-            store.allowance[from][msg.sender] -= amount;
+            store.allowance[from][Context.getMessageSender()] -= amount;
         }
 
         super._transfer(from, to, _tokenToShare(amount));

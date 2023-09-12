@@ -3,6 +3,7 @@ pragma solidity >=0.8.11 <0.9.0;
 
 import "../../token/ERC20.sol";
 import "../../interfaces/IERC20Permit.sol";
+import "../../context/Context.sol";
 
 contract VaultMock {
     IERC20Permit public token;
@@ -18,7 +19,7 @@ contract VaultMock {
         bytes32 r,
         bytes32 s
     ) external payable {
-        token.permit(msg.sender, address(this), amount, deadline, v, r, s);
-        token.transferFrom(msg.sender, address(this), amount);
+        token.permit(Context.getMessageSender(), address(this), amount, deadline, v, r, s);
+        token.transferFrom(Context.getMessageSender(), address(this), amount);
     }
 }

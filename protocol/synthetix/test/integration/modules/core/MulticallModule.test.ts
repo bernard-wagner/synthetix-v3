@@ -6,8 +6,9 @@ import { ethers } from 'ethers';
 import assertRevert from '@synthetixio/core-utils/utils/assertions/assert-revert';
 import assertEvent from '@synthetixio/core-utils/utils/assertions/assert-event';
 import hre from 'hardhat';
+import Permissions from '../../mixins/AccountRBACMixin.permissions';
 
-describe('MulticallModule', function () {
+describe.only('MulticallModule', function () {
   const { systems, signers } = bootstrap();
 
   let owner: ethers.Signer, user1: ethers.Signer;
@@ -56,7 +57,7 @@ describe('MulticallModule', function () {
     it('passes through errors', async () => {
       await assertRevert(
         systems()
-          .Core.connect(user1)
+          .Multicall.connect(user1)
           //@ts-ignore tests is skipped, fixe type when enabled
           .multicallThrough(
             [systems().Core.address],
@@ -72,49 +73,25 @@ describe('MulticallModule', function () {
       );
     });
 
-    it('only works for allowlisted targets', async () => {
-      await assertRevert(
-        systems()
-          .Core.connect(user1)
-          //@ts-ignore tests is skipped, fixe type when enabled
-          .multicallThrough(
-            [systems().Core.address, systems().OracleManager.address],
-            [
-              systems().Core.interface.encodeFunctionData('createAccount(uint128)', [1234434]),
-              systems().OracleManager.interface.encodeFunctionData('registerNode', [
-                8,
-                ethers.utils.defaultAbiCoder.encode(['uint256'], [429]),
-                [],
-              ]),
-            ],
-            [0, 0]
-          ),
-        `DeniedMulticallTarget("${systems().OracleManager.address}")`,
-        systems().Core
-      );
-    });
-
     describe('on success', async () => {
-      before('allowlist OracleManager', async () => {
-        await systems()
-          .Core.connect(owner)
-          .setAllowlistedMulticallTarget(systems().OracleManager.address, true);
-      });
       before('call', async () => {
         await systems()
-          .Core.connect(user1)
+          .Multicall.connect(user1)
           //@ts-ignore tests is skipped, fixe type when enabled
           .multicallThrough(
-            [systems().Core.address, systems().OracleManager.address],
+            [systems().Core.address, systems().Core.address, systems().OracleManager.address, systems().Core.address, systems().Account.address],
             [
               systems().Core.interface.encodeFunctionData('createAccount(uint128)', [1234434]),
+              systems().Core.interface.encodeFunctionData('createAccount(uint128)', [1234435]),
               systems().OracleManager.interface.encodeFunctionData('registerNode', [
                 8,
                 ethers.utils.defaultAbiCoder.encode(['uint256'], [429]),
                 [],
               ]),
+              systems().Core.interface.encodeFunctionData('grantPermission', [1234434, Permissions.ADMIN, await owner.getAddress()]),
+              systems().Account.interface.encodeFunctionData('transferFrom', [await user1.getAddress(), await owner.getAddress(), 1234435]),
             ],
-            [0, 0]
+            [0, 0, 0, 0, 0]
           );
       });
 
@@ -126,6 +103,8 @@ describe('MulticallModule', function () {
         );
 
         assert.equal(await systems().Account.ownerOf(1234434), await user1.getAddress());
+        assert.equal(await systems().Account.ownerOf(1234435), await owner.getAddress());
+        assert.equal(await systems().Core.hasPermission(1234434, Permissions.ADMIN, await owner.getAddress()), true);
         assert.equal((await systems().OracleManager.getNode(nodeId)).nodeType, 8);
       });
     });
@@ -134,14 +113,12 @@ describe('MulticallModule', function () {
       let receiverContract: ethers.Contract;
       let tx: ethers.providers.TransactionResponse;
       before('deploy multicall receiver', async () => {
-        const factory = await hre.ethers.getContractFactory('MulticallReceiver');
+        const factory = await hre.ethers.getContractFactory('MulticallReceiverMock');
         const MulticallReceiver = await factory.deploy();
         receiverContract = await MulticallReceiver.deployed();
-        await systems()
-          .Core.connect(owner)
-          .setAllowlistedMulticallTarget(receiverContract.address, true);
+
         tx = await systems()
-          .Core.connect(user1)
+          .Multicall.connect(user1)
           .multicallThrough(
             [receiverContract.address],
             [receiverContract.interface.encodeFunctionData('testMessageSender')],
@@ -158,18 +135,8 @@ describe('MulticallModule', function () {
       });
 
       it('should have reset messageSender after multicall', async () => {
-        assert.equal(await systems().Core.getMessageSender(), ethers.constants.AddressZero);
+        assert.equal(await systems().Multicall.getMessageSender(), ethers.constants.AddressZero);
       });
-    });
-  });
-
-  describe('setAllowlistedMulticallTarget()', () => {
-    it('only owner can set allowlisted target', async () => {
-      await assertRevert(
-        systems().Core.connect(user1).setAllowlistedMulticallTarget(user1.getAddress(), true),
-        'Unauthorized',
-        systems().Core
-      );
     });
   });
 });

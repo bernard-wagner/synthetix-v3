@@ -5,6 +5,7 @@ import "./OwnableStorage.sol";
 import "../interfaces/IOwnable.sol";
 import "../errors/AddressError.sol";
 import "../errors/ChangeError.sol";
+import "../context/Context.sol";
 
 /**
  * @title Contract for facilitating ownership by a single address.
@@ -22,8 +23,8 @@ contract Ownable is IOwnable {
         OwnableStorage.Data storage store = OwnableStorage.load();
 
         address currentNominatedOwner = store.nominatedOwner;
-        if (msg.sender != currentNominatedOwner) {
-            revert NotNominated(msg.sender);
+        if (Context.getMessageSender() != currentNominatedOwner) {
+            revert NotNominated(Context.getMessageSender());
         }
 
         emit OwnerChanged(store.owner, currentNominatedOwner);
@@ -56,8 +57,8 @@ contract Ownable is IOwnable {
     function renounceNomination() external override {
         OwnableStorage.Data storage store = OwnableStorage.load();
 
-        if (store.nominatedOwner != msg.sender) {
-            revert NotNominated(msg.sender);
+        if (store.nominatedOwner != Context.getMessageSender()) {
+            revert NotNominated(Context.getMessageSender());
         }
 
         store.nominatedOwner = address(0);

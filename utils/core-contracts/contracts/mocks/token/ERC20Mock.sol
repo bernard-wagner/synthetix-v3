@@ -2,6 +2,7 @@
 pragma solidity >=0.8.11 <0.9.0;
 
 import "../../token/ERC20.sol";
+import "../../context/Context.sol";
 
 contract ERC20Mock is ERC20 {
 		// solhint-disable-next-line payable/only-payable
@@ -25,11 +26,11 @@ contract ERC20Mock is ERC20 {
 
 		// solhint-disable-next-line payable/only-payable
     function mint(uint256 amount) external {
-        _mint(msg.sender, amount);
+        _mint(Context.getMessageSender(), amount);
     }
 
 		// solhint-disable-next-line payable/only-payable
     function burn(uint256 amount) external {
-        _burn(msg.sender, amount);
+        _burn(Context.getMessageSender(), amount);
     }
 }

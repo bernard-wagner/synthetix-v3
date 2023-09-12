@@ -5,6 +5,7 @@ import "../interfaces/IERC20.sol";
 import "../errors/InitError.sol";
 import "../errors/ParameterError.sol";
 import "./ERC20Storage.sol";
+import "../context/Context.sol";
 
 /*
  * @title ERC20 token implementation.
@@ -65,7 +66,7 @@ contract ERC20 is IERC20 {
      */
 		// solhint-disable-next-line payable/only-payable
     function approve(address spender, uint256 amount) public virtual override returns (bool) {
-        _approve(msg.sender, spender, amount);
+        _approve(Context.getMessageSender(), spender, amount);
         return true;
     }
 
@@ -77,8 +78,8 @@ contract ERC20 is IERC20 {
         address spender,
         uint256 addedValue
     ) public virtual override returns (bool) {
-        uint256 currentAllowance = ERC20Storage.load().allowance[msg.sender][spender];
-        _approve(msg.sender, spender, currentAllowance + addedValue);
+        uint256 currentAllowance = ERC20Storage.load().allowance[Context.getMessageSender()][spender];
+        _approve(Context.getMessageSender(), spender, currentAllowance + addedValue);
 
         return true;
     }
@@ -91,8 +92,8 @@ contract ERC20 is IERC20 {
         address spender,
         uint256 subtractedValue
     ) public virtual override returns (bool) {
-        uint256 currentAllowance = ERC20Storage.load().allowance[msg.sender][spender];
-        _approve(msg.sender, spender, currentAllowance - subtractedValue);
+        uint256 currentAllowance = ERC20Storage.load().allowance[Context.getMessageSender()][spender];
+        _approve(Context.getMessageSender(), spender, currentAllowance - subtractedValue);
 
         return true;
     }
@@ -102,7 +103,7 @@ contract ERC20 is IERC20 {
      */
 		// solhint-disable-next-line payable/only-payable
     function transfer(address to, uint256 amount) public virtual override returns (bool) {
-        _transfer(msg.sender, to, amount);
+        _transfer(Context.getMessageSender(), to, amount);
 
         return true;
     }
@@ -126,13 +127,13 @@ contract ERC20 is IERC20 {
     ) internal virtual returns (bool) {
         ERC20Storage.Data storage store = ERC20Storage.load();
 
-        uint256 currentAllowance = store.allowance[from][msg.sender];
+        uint256 currentAllowance = store.allowance[from][Context.getMessageSender()];
         if (currentAllowance < amount) {
             revert InsufficientAllowance(amount, currentAllowance);
         }
 
         unchecked {
-            store.allowance[from][msg.sender] -= amount;
+            store.allowance[from][Context.getMessageSender()] -= amount;
         }
 
         _transfer(from, to, amount);

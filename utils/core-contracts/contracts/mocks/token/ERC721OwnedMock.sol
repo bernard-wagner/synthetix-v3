@@ -2,6 +2,7 @@
 pragma solidity >=0.8.11 <0.9.0;
 
 import "../../token/ERC721Owned.sol";
+import "../../context/Context.sol";
 
 contract ERC721OwnedMock is ERC721Owned {
     // solhint-disable-next-line no-empty-blocks
@@ -18,7 +19,7 @@ contract ERC721OwnedMock is ERC721Owned {
 
 		// solhint-disable-next-line payable/only-payable
     function mint(uint256 tokenId) external {
-        _mint(msg.sender, tokenId);
+        _mint(Context.getMessageSender(), tokenId);
     }
 
 		// solhint-disable-next-line payable/only-payable

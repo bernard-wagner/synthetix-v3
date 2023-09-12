@@ -6,6 +6,7 @@ import "@synthetixio/core-contracts/contracts/utils/SafeCast.sol";
 
 import "../../storage/Account.sol";
 import "../../storage/Pool.sol";
+import "@synthetixio/core-contracts/contracts/context/Context.sol";
 
 import "@synthetixio/core-modules/contracts/storage/FeatureFlag.sol";
 
@@ -148,7 +149,7 @@ contract VaultModule is IVaultModule {
             collateralType,
             newCollateralAmountD18,
             leverage,
-            msg.sender
+            Context.getMessageSender()
         );
     }
 

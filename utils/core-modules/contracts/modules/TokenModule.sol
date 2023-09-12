@@ -36,6 +36,11 @@ contract TokenModule is ITokenModule, ERC20, InitializableMixin {
         _initialize(tokenName, tokenSymbol, tokenDecimals);
     }
 
+    function setMulticallProxyAddress(address proxy) external payable virtual override {
+        OwnableStorage.onlyOwner();
+        Context.setMulticallAddress(proxy);
+    }
+
     /**
      * @inheritdoc ITokenModule
      */

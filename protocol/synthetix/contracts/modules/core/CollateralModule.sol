@@ -10,6 +10,7 @@ import "../../interfaces/ICollateralModule.sol";
 import "../../storage/Account.sol";
 import "../../storage/CollateralConfiguration.sol";
 import "../../storage/Config.sol";
+import "@synthetixio/core-contracts/contracts/context/Context.sol";
 
 import "@synthetixio/core-modules/contracts/storage/FeatureFlag.sol";
 
@@ -44,7 +45,7 @@ contract CollateralModule is ICollateralModule {
 
         Account.Data storage account = Account.load(accountId);
 
-        address depositFrom = msg.sender;
+        address depositFrom = Context.getMessageSender();
 
         address self = address(this);
 
@@ -59,7 +60,7 @@ contract CollateralModule is ICollateralModule {
             CollateralConfiguration.load(collateralType).convertTokenToSystemAmount(tokenAmount)
         );
 
-        emit Deposited(accountId, collateralType, tokenAmount, msg.sender);
+        emit Deposited(accountId, collateralType, tokenAmount, Context.getMessageSender());
     }
 
     /**
@@ -95,9 +96,9 @@ contract CollateralModule is ICollateralModule {
 
         account.collaterals[collateralType].decreaseAvailableCollateral(tokenAmountD18);
 
-        collateralType.safeTransfer(msg.sender, tokenAmount);
+        collateralType.safeTransfer(Context.getMessageSender(), tokenAmount);
 
-        emit Withdrawn(accountId, collateralType, tokenAmount, msg.sender);
+        emit Withdrawn(accountId, collateralType, tokenAmount, Context.getMessageSender());
     }
 
     /**

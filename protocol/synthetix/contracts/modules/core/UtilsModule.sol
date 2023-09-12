@@ -93,6 +93,12 @@ contract UtilsModule is IUtilsModule {
         oracle.oracleManagerAddress = oracleManagerAddress;
     }
 
+    function configureMulticall(address multicallAddress) external payable override {
+        OwnableStorage.onlyOwner();
+
+        Context.setMulticallAddress(multicallAddress);
+    }
+
     function setConfig(bytes32 k, bytes32 v) external payable override {
         OwnableStorage.onlyOwner();
         return Config.put(k, v);

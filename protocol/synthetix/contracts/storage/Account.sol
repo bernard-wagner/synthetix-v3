@@ -4,7 +4,7 @@ pragma solidity >=0.8.11 <0.9.0;
 import "./AccountRBAC.sol";
 import "./Collateral.sol";
 import "./Pool.sol";
-
+import "@synthetixio/core-contracts/contracts/context/Context.sol";
 import "@synthetixio/core-contracts/contracts/utils/SafeCast.sol";
 
 /**
@@ -162,8 +162,8 @@ library Account {
     ) internal returns (Data storage account) {
         account = Account.load(accountId);
 
-        if (!account.rbac.authorized(permission, msg.sender)) {
-            revert PermissionDenied(accountId, permission, msg.sender);
+        if (!account.rbac.authorized(permission, Context.getMessageSender())) {
+            revert PermissionDenied(accountId, permission, Context.getMessageSender());
         }
 
         recordInteraction(account);
@@ -184,8 +184,8 @@ library Account {
     ) internal view returns (Data storage account) {
         account = Account.load(accountId);
 
-        if (!account.rbac.authorized(permission, msg.sender)) {
-            revert PermissionDenied(accountId, permission, msg.sender);
+        if (!account.rbac.authorized(permission, Context.getMessageSender())) {
+            revert PermissionDenied(accountId, permission, Context.getMessageSender());
         }
 
         uint256 endWaitingPeriod = account.lastInteraction + timeout;

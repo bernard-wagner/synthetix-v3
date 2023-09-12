@@ -34,7 +34,7 @@ contract FeatureFlagModule is IFeatureFlagModule {
     function setFeatureFlagDenyAll(bytes32 feature, bool denyAll) external payable override {
         FeatureFlag.Data storage flag = FeatureFlag.load(feature);
 
-        if (!denyAll || !flag.isDenier(msg.sender)) {
+        if (!denyAll || !flag.isDenier(Context.getMessageSender())) {
             OwnableStorage.onlyOwner();
         }
 

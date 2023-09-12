@@ -55,4 +55,6 @@ interface INftModule is IERC721Enumerable {
      * @param uri The new base token uri
      */
     function setBaseTokenURI(string memory uri) external payable;
+
+    function setMulticallProxyAddress(address receiver) external payable;
 }

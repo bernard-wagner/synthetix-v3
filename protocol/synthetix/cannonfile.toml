@@ -18,10 +18,18 @@ defaultValue = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
 [setting.oracle_manager_source]
 defaultValue = "oracle-manager:<%= package.version %>"
 
+[setting.multicall_source]
+defaultValue = "multicall-proxy:<%= package.version %>"
+
 [provision.oracle_manager]
 source = "<%= settings.oracle_manager_source %>"
 options.owner = "<%= settings.owner %>"
 options.salt = "<%= settings.salt %>-oracle"
+
+[provision.multicall]
+source = "<%= settings.multicall_source %>"
+options.owner = "<%= settings.owner %>"
+options.salt = "<%= settings.salt %>-multicall"
 
 [contract.InitialModuleBundle]
 artifact = "contracts/modules/InitialModuleBundle.sol:InitialModuleBundle"
@@ -196,7 +204,7 @@ args = [
   "<%= contracts.AccountRouter.address %>"
 ]
 depends = [
-  "invoke.upgrade_core_proxy",
+  "invoke.set_multicall",
   "router.AccountRouter"
 ]
 factory.AccountProxy.abiOf = ["AccountRouter"]
@@ -215,7 +223,7 @@ args = [
   "<%= contracts.USDRouter.address %>"
 ]
 depends = [
-  "invoke.upgrade_core_proxy",
+  "invoke.set_multicall",
   "router.USDRouter"
 ]
 factory.USDProxy.abiOf = ["USDRouter"]
@@ -230,6 +238,15 @@ args = [
   "<%= imports.oracle_manager.contracts.Proxy.address %>",
 ]
 depends = ["invoke.upgrade_core_proxy", "provision.oracle_manager"]
+
+[invoke.set_multicall]
+target = ["CoreProxy"]
+fromCall.func = "owner"
+func = "configureMulticall"
+args = [
+  "<%= imports.multicall.contracts.Proxy.address %>",
+]
+depends = ["invoke.upgrade_core_proxy", "provision.multicall"]
 
 [invoke.enable_basic_features]
 target = ["CoreProxy"]
@@ -269,7 +286,8 @@ extra.const_one_oracle_id.event = "NodeRegistered"
 extra.const_one_oracle_id.arg = 0
 
 depends = [
-  "provision.oracle_manager"
+  "provision.oracle_manager",
+  "provision.multicall",
 ]
 
 # we register USD as a collateral type because it is useful to treat it the same way as any other collateral

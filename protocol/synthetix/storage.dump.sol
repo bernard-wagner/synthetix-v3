@@ -1,6 +1,20 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.4;
 
+// @custom:artifact @synthetixio/core-contracts/contracts/context/Context.sol:Context
+library Context {
+    bytes32 private constant _SLOT_SYSTEM_CONTEXT = keccak256(abi.encode("io.synthetix.synthetix.Context"));
+    struct Data {
+        address instance;
+    }
+    function load() internal pure returns (Data storage data) {
+        bytes32 slot = _SLOT_SYSTEM_CONTEXT;
+        assembly {
+            data.slot := slot
+        }
+    }
+}
+
 // @custom:artifact @synthetixio/core-contracts/contracts/ownership/OwnableStorage.sol:OwnableStorage
 library OwnableStorage {
     bytes32 private constant _SLOT_OWNABLE_STORAGE = keccak256(abi.encode("io.synthetix.core-contracts.Ownable"));
@@ -294,14 +308,6 @@ contract MarketManagerModule {
     bytes32 private constant _CONFIG_WITHDRAW_MARKET_USD_FEE_RATIO = "withdrawMarketUsd_feeRatio";
     bytes32 private constant _CONFIG_DEPOSIT_MARKET_USD_FEE_ADDRESS = "depositMarketUsd_feeAddress";
     bytes32 private constant _CONFIG_WITHDRAW_MARKET_USD_FEE_ADDRESS = "withdrawMarketUsd_feeAddress";
-}
-
-// @custom:artifact contracts/modules/core/MulticallModule.sol:MulticallModule
-contract MulticallModule {
-    bytes32 internal constant _CONFIG_MESSAGE_SENDER = "_messageSender";
-    bytes32 internal constant _CONFIG_ALLOWLISTED_MULTICALL_TARGETS = "_allowlistedMulticallTargets";
-    bytes32 private constant ALLOWED = bytes32(uint256(1));
-    bytes32 private constant DISALLOWED = bytes32(uint256(0));
 }
 
 // @custom:artifact contracts/modules/core/PoolModule.sol:PoolModule

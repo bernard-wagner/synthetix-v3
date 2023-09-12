@@ -11,6 +11,7 @@ import "@synthetixio/core-modules/contracts/storage/FeatureFlag.sol";
 
 import "../../interfaces/IPoolModule.sol";
 import "../../storage/Pool.sol";
+import "@synthetixio/core-contracts/contracts/context/Context.sol";
 
 /**
  * @title Module for the creation and management of pools.
@@ -39,18 +40,18 @@ contract PoolModule is IPoolModule {
 
         Pool.create(requestedPoolId, owner);
 
-        emit PoolCreated(requestedPoolId, owner, msg.sender);
+        emit PoolCreated(requestedPoolId, owner, Context.getMessageSender());
     }
 
     /**
      * @inheritdoc IPoolModule
      */
     function nominatePoolOwner(address nominatedOwner, uint128 poolId) external payable override {
-        Pool.onlyPoolOwner(poolId, msg.sender);
+        Pool.onlyPoolOwner(poolId, Context.getMessageSender());
 
         Pool.load(poolId).nominatedOwner = nominatedOwner;
 
-        emit PoolOwnerNominated(poolId, nominatedOwner, msg.sender);
+        emit PoolOwnerNominated(poolId, nominatedOwner, Context.getMessageSender());
     }
 
     /**
@@ -59,25 +60,25 @@ contract PoolModule is IPoolModule {
     function acceptPoolOwnership(uint128 poolId) external payable override {
         Pool.Data storage pool = Pool.load(poolId);
 
-        if (pool.nominatedOwner != msg.sender) {
-            revert AccessError.Unauthorized(msg.sender);
+        if (pool.nominatedOwner != Context.getMessageSender()) {
+            revert AccessError.Unauthorized(Context.getMessageSender());
         }
 
-        pool.owner = msg.sender;
+        pool.owner = Context.getMessageSender();
         pool.nominatedOwner = address(0);
 
-        emit PoolOwnershipAccepted(poolId, msg.sender);
+        emit PoolOwnershipAccepted(poolId, Context.getMessageSender());
     }
 
     /**
      * @inheritdoc IPoolModule
      */
     function revokePoolNomination(uint128 poolId) external payable override {
-        Pool.onlyPoolOwner(poolId, msg.sender);
+        Pool.onlyPoolOwner(poolId, Context.getMessageSender());
 
         Pool.load(poolId).nominatedOwner = address(0);
 
-        emit PoolNominationRevoked(poolId, msg.sender);
+        emit PoolNominationRevoked(poolId, Context.getMessageSender());
     }
 
     /**
@@ -86,13 +87,13 @@ contract PoolModule is IPoolModule {
     function renouncePoolNomination(uint128 poolId) external payable override {
         Pool.Data storage pool = Pool.load(poolId);
 
-        if (pool.nominatedOwner != msg.sender) {
-            revert AccessError.Unauthorized(msg.sender);
+        if (pool.nominatedOwner != Context.getMessageSender()) {
+            revert AccessError.Unauthorized(Context.getMessageSender());
         }
 
         pool.nominatedOwner = address(0);
 
-        emit PoolNominationRenounced(poolId, msg.sender);
+        emit PoolNominationRenounced(poolId, Context.getMessageSender());
     }
 
     /**
@@ -134,7 +135,7 @@ contract PoolModule is IPoolModule {
         MarketConfiguration.Data[] memory newMarketConfigurations
     ) external payable override {
         Pool.Data storage pool = Pool.loadExisting(poolId);
-        Pool.onlyPoolOwner(poolId, msg.sender);
+        Pool.onlyPoolOwner(poolId, Context.getMessageSender());
         pool.requireMinDelegationTimeElapsed(pool.lastConfigurationTime);
 
         // Update each market's pro-rata liquidity and collect accumulated debt into the pool's debt distribution.
@@ -197,7 +198,7 @@ contract PoolModule is IPoolModule {
         // solhint-disable-next-line numcast/safe-cast
         pool.lastConfigurationTime = uint64(block.timestamp);
 
-        emit PoolConfigurationSet(poolId, newMarketConfigurations, msg.sender);
+        emit PoolConfigurationSet(poolId, newMarketConfigurations, Context.getMessageSender());
     }
 
     /**
@@ -208,7 +209,7 @@ contract PoolModule is IPoolModule {
         bool disabled
     ) external payable override {
         Pool.Data storage pool = Pool.loadExisting(poolId);
-        Pool.onlyPoolOwner(poolId, msg.sender);
+        Pool.onlyPoolOwner(poolId, Context.getMessageSender());
 
         pool.collateralDisabledByDefault = disabled;
 
@@ -239,11 +240,11 @@ contract PoolModule is IPoolModule {
      */
     function setPoolName(uint128 poolId, string memory name) external payable override {
         Pool.Data storage pool = Pool.loadExisting(poolId);
-        Pool.onlyPoolOwner(poolId, msg.sender);
+        Pool.onlyPoolOwner(poolId, Context.getMessageSender());
 
         pool.name = name;
 
-        emit PoolNameUpdated(poolId, name, msg.sender);
+        emit PoolNameUpdated(poolId, name, Context.getMessageSender());
     }
 
     /**
@@ -255,7 +256,7 @@ contract PoolModule is IPoolModule {
         PoolCollateralConfiguration.Data memory newConfig
     ) external payable override {
         Pool.Data storage pool = Pool.loadExisting(poolId);
-        Pool.onlyPoolOwner(poolId, msg.sender);
+        Pool.onlyPoolOwner(poolId, Context.getMessageSender());
 
         pool.collateralConfigurations[collateralType] = newConfig;
 

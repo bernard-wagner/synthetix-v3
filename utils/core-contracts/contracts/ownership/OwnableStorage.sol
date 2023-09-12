@@ -2,6 +2,7 @@
 pragma solidity >=0.8.11 <0.9.0;
 
 import "../errors/AccessError.sol";
+import "../context/Context.sol";
 
 library OwnableStorage {
     bytes32 private constant _SLOT_OWNABLE_STORAGE =
@@ -20,8 +21,8 @@ library OwnableStorage {
     }
 
     function onlyOwner() internal view {
-        if (msg.sender != getOwner()) {
-            revert AccessError.Unauthorized(msg.sender);
+        if (Context.getMessageSender() != getOwner()) {
+            revert AccessError.Unauthorized(Context.getMessageSender());
         }
     }
 

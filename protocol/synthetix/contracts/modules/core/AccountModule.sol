@@ -7,6 +7,7 @@ import "../../interfaces/IAccountModule.sol";
 import "../../interfaces/IAccountTokenModule.sol";
 import "../../storage/Account.sol";
 import "../../storage/SystemAccountConfiguration.sol";
+import "@synthetixio/core-contracts/contracts/context/Context.sol";
 
 import "@synthetixio/core-modules/contracts/storage/FeatureFlag.sol";
 
@@ -61,11 +62,11 @@ contract AccountModule is IAccountModule {
         }
 
         IAccountTokenModule accountTokenModule = IAccountTokenModule(getAccountTokenAddress());
-        accountTokenModule.safeMint(msg.sender, requestedAccountId, "");
+        accountTokenModule.safeMint(Context.getMessageSender(), requestedAccountId, "");
 
-        Account.create(requestedAccountId, msg.sender);
+        Account.create(requestedAccountId, Context.getMessageSender());
 
-        emit AccountCreated(requestedAccountId, msg.sender);
+        emit AccountCreated(requestedAccountId, Context.getMessageSender());
     }
 
     /**
@@ -81,11 +82,11 @@ contract AccountModule is IAccountModule {
         accountId = (type(uint128).max / 2) + systemAccountConfiguration.accountIdOffset;
         systemAccountConfiguration.accountIdOffset += 1;
 
-        Account.create(accountId, msg.sender);
+        Account.create(accountId, Context.getMessageSender());
 
-        accountTokenModule.safeMint(msg.sender, accountId, "");
+        accountTokenModule.safeMint(Context.getMessageSender(), accountId, "");
 
-        emit AccountCreated(accountId, msg.sender);
+        emit AccountCreated(accountId, Context.getMessageSender());
     }
 
     /**
@@ -143,7 +144,7 @@ contract AccountModule is IAccountModule {
 
         account.rbac.grantPermission(permission, user);
 
-        emit PermissionGranted(accountId, permission, user, msg.sender);
+        emit PermissionGranted(accountId, permission, user, Context.getMessageSender());
     }
 
     /**
@@ -161,20 +162,20 @@ contract AccountModule is IAccountModule {
 
         account.rbac.revokePermission(permission, user);
 
-        emit PermissionRevoked(accountId, permission, user, msg.sender);
+        emit PermissionRevoked(accountId, permission, user, Context.getMessageSender());
     }
 
     /**
      * @inheritdoc IAccountModule
      */
     function renouncePermission(uint128 accountId, bytes32 permission) external payable override {
-        if (!Account.load(accountId).rbac.hasPermission(permission, msg.sender)) {
-            revert PermissionNotGranted(accountId, permission, msg.sender);
+        if (!Account.load(accountId).rbac.hasPermission(permission, Context.getMessageSender())) {
+            revert PermissionNotGranted(accountId, permission, Context.getMessageSender());
         }
 
-        Account.load(accountId).rbac.revokePermission(permission, msg.sender);
+        Account.load(accountId).rbac.revokePermission(permission, Context.getMessageSender());
 
-        emit PermissionRevoked(accountId, permission, msg.sender, msg.sender);
+        emit PermissionRevoked(accountId, permission, Context.getMessageSender(), Context.getMessageSender());
     }
 
     /**
@@ -197,8 +198,8 @@ contract AccountModule is IAccountModule {
     // Note: Disabling Solidity warning, not sure why it suggests pure mutability.
     // solc-ignore-next-line func-mutability
     function _onlyAccountToken() internal view {
-        if (msg.sender != address(getAccountTokenAddress())) {
-            revert OnlyAccountTokenProxy(msg.sender);
+        if (Context.getMessageSender() != address(getAccountTokenAddress())) {
+            revert OnlyAccountTokenProxy(Context.getMessageSender());
         }
     }
 }

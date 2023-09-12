@@ -1,0 +1,46 @@
+name = "multicall-proxy"
+version = "<%= package.version %>"
+description = "Core synthetix multicall proxy"
+
+# `salt` here only affects proxy contract
+[setting.salt]
+description = "Change this to a unique string when deploying multiple instances of the system. Note that only the proxy contract will be unique."
+defaultValue = "multicall-proxy-official"
+
+[setting.owner]
+description = "Admin user for the system"
+defaultValue = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
+
+[contract.MulticallModule]
+artifact = "contracts/modules/MulticallModule.sol:MulticallModule"
+
+[contract.CoreModule]
+artifact = "contracts/modules/CoreModule.sol:CoreModule"
+salt = "<%= settings.salt %>"
+create2 = true
+
+[contract.InitialProxy]
+artifact = "contracts/Proxy.sol:Proxy"
+args = ["<%= contracts.CoreModule.address %>", "<%= settings.owner %>"]
+salt = "<%= settings.salt %>"
+abiOf = ["CoreModule"]
+create2 = true
+
+depends = ["contract.CoreModule"]
+
+[router.MulticallRouter]
+contracts = ["CoreModule", "MulticallModule"]
+depends = [
+  "contract.CoreModule",
+  "contract.MulticallModule"
+]
+
+[invoke.upgrade_proxy]
+target = ["InitialProxy"]
+fromCall.func = "owner"
+func = "upgradeTo"
+args = ["<%= contracts.MulticallRouter.address %>"]
+factory.Proxy.abiOf = ["MulticallRouter"]
+factory.Proxy.event = "Upgraded"
+factory.Proxy.arg = 0
+depends = ["contract.InitialProxy", "router.MulticallRouter"]

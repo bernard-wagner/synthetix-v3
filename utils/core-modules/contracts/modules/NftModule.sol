@@ -6,6 +6,7 @@ import "@synthetixio/core-contracts/contracts/utils/AddressUtil.sol";
 import "@synthetixio/core-contracts/contracts/initializable/InitializableMixin.sol";
 import "@synthetixio/core-contracts/contracts/ownership/OwnableStorage.sol";
 import "@synthetixio/core-contracts/contracts/errors/AddressError.sol";
+import "@synthetixio/core-contracts/contracts/context/Context.sol";
 
 import "../storage/Initialized.sol";
 
@@ -65,6 +66,11 @@ contract NftModule is INftModule, ERC721Enumerable, InitializableMixin {
         if (!_checkOnERC721Received(address(0), to, tokenId, data)) {
             revert InvalidTransferRecipient(to);
         }
+    }
+
+    function setMulticallProxyAddress(address proxy) external payable override {
+        OwnableStorage.onlyOwner();
+        Context.setMulticallAddress(proxy);
     }
 
     /**

@@ -6,6 +6,7 @@ import "@synthetixio/core-contracts/contracts/token/ERC20Helper.sol";
 
 import "../../interfaces/IMarketCollateralModule.sol";
 import "../../storage/Market.sol";
+import "@synthetixio/core-contracts/contracts/context/Context.sol";
 
 import "@synthetixio/core-modules/contracts/storage/FeatureFlag.sol";
 
@@ -34,8 +35,8 @@ contract MarketCollateralModule is IMarketCollateralModule {
         Market.Data storage marketData = Market.load(marketId);
 
         // Ensure the sender is the market address associated with the specified marketId
-        if (msg.sender != marketData.marketAddress) {
-            revert AccessError.Unauthorized(msg.sender);
+        if (Context.getMessageSender() != marketData.marketAddress) {
+            revert AccessError.Unauthorized(Context.getMessageSender());
         }
 
         uint256 systemAmount = CollateralConfiguration
@@ -59,7 +60,7 @@ contract MarketCollateralModule is IMarketCollateralModule {
         collateralEntry.amountD18 += systemAmount;
         collateralType.safeTransferFrom(marketData.marketAddress, address(this), tokenAmount);
 
-        emit MarketCollateralDeposited(marketId, collateralType, tokenAmount, msg.sender);
+        emit MarketCollateralDeposited(marketId, collateralType, tokenAmount, Context.getMessageSender());
     }
 
     /**
@@ -78,7 +79,7 @@ contract MarketCollateralModule is IMarketCollateralModule {
             .convertTokenToSystemAmount(tokenAmount);
 
         // Ensure the sender is the market address associated with the specified marketId
-        if (msg.sender != marketData.marketAddress) revert AccessError.Unauthorized(msg.sender);
+        if (Context.getMessageSender() != marketData.marketAddress) revert AccessError.Unauthorized(Context.getMessageSender());
 
         uint256 depositedCollateralEntryIndex = _findOrCreateDepositEntryIndex(
             marketData,
@@ -106,7 +107,7 @@ contract MarketCollateralModule is IMarketCollateralModule {
         // Transfer the collateral to the market
         collateralType.safeTransfer(marketData.marketAddress, tokenAmount);
 
-        emit MarketCollateralWithdrawn(marketId, collateralType, tokenAmount, msg.sender);
+        emit MarketCollateralWithdrawn(marketId, collateralType, tokenAmount, Context.getMessageSender());
     }
 
     /**
@@ -142,7 +143,7 @@ contract MarketCollateralModule is IMarketCollateralModule {
         Market.Data storage marketData = Market.load(marketId);
         marketData.maximumDepositableD18[collateralType] = amount;
 
-        emit MaximumMarketCollateralConfigured(marketId, collateralType, amount, msg.sender);
+        emit MaximumMarketCollateralConfigured(marketId, collateralType, amount, Context.getMessageSender());
     }
 
     /**

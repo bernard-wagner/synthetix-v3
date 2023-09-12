@@ -10,6 +10,7 @@ import "@synthetixio/core-contracts/contracts/utils/ERC165Helper.sol";
 import "../../storage/Account.sol";
 import "../../storage/AccountRBAC.sol";
 import "../../storage/Pool.sol";
+import "@synthetixio/core-contracts/contracts/context/Context.sol";
 
 import "../../interfaces/IRewardsManagerModule.sol";
 
@@ -48,8 +49,8 @@ contract RewardsManagerModule is IRewardsManagerModule {
         Pool.Data storage pool = Pool.load(poolId);
         SetUtil.Bytes32Set storage rewardIds = pool.vaults[collateralType].rewardIds;
 
-        if (pool.owner != msg.sender) {
-            revert AccessError.Unauthorized(msg.sender);
+        if (pool.owner != Context.getMessageSender()) {
+            revert AccessError.Unauthorized(Context.getMessageSender());
         }
 
         // Limit the maximum amount of rewards distributors can be connected to each vault to prevent excessive gas usage on other calls
@@ -95,7 +96,7 @@ contract RewardsManagerModule is IRewardsManagerModule {
         SetUtil.Bytes32Set storage rewardIds = pool.vaults[collateralType].rewardIds;
 
         // Identify the reward id for the caller, and revert if it is not a registered reward distributor.
-        bytes32 rewardId = _getRewardId(poolId, collateralType, msg.sender);
+        bytes32 rewardId = _getRewardId(poolId, collateralType, Context.getMessageSender());
         if (!rewardIds.contains(rewardId)) {
             revert ParameterError.InvalidParameter(
                 "poolId-collateralType-distributor",
@@ -115,7 +116,7 @@ contract RewardsManagerModule is IRewardsManagerModule {
             .toUint()
             .to128();
 
-        emit RewardsDistributed(poolId, collateralType, msg.sender, amount, start, duration);
+        emit RewardsDistributed(poolId, collateralType, Context.getMessageSender(), amount, start, duration);
     }
 
     /**
@@ -169,7 +170,7 @@ contract RewardsManagerModule is IRewardsManagerModule {
             accountId,
             poolId,
             collateralType,
-            msg.sender,
+            Context.getMessageSender(),
             rewardAmount
         );
 
@@ -239,8 +240,8 @@ contract RewardsManagerModule is IRewardsManagerModule {
         Pool.Data storage pool = Pool.load(poolId);
         SetUtil.Bytes32Set storage rewardIds = pool.vaults[collateralType].rewardIds;
 
-        if (pool.owner != msg.sender) {
-            revert AccessError.Unauthorized(msg.sender);
+        if (pool.owner != Context.getMessageSender()) {
+            revert AccessError.Unauthorized(Context.getMessageSender());
         }
 
         bytes32 rewardId = _getRewardId(poolId, collateralType, distributor);
